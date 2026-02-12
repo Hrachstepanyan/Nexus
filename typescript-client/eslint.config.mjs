@@ -239,9 +239,6 @@ export default tseslint.config(
       ],
 
       // ===== Overrides for specific patterns =====
-      '@typescript-eslint/require-await': 'warn', // Warn instead of error
-      '@typescript-eslint/no-unsafe-assignment': 'warn', // Warn for gradual migration
-      '@typescript-eslint/no-unsafe-return': 'warn',
       '@typescript-eslint/restrict-template-expressions': [
         'error',
         { allowNumber: true, allowBoolean: false, allowNullish: false },
