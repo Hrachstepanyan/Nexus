@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  quivr-service:
+    build:
+      context: ./quivr-service
+      dockerfile: Dockerfile
+    container_name: quivr-brain-service
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ENV=development
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - LOG_LEVEL=INFO
+      - BRAINS_STORAGE_PATH=/app/brains_data
+    volumes:
+      - ./quivr-service/brains_data:/app/brains_data
+      - ./quivr-service/src:/app/src  # Hot reload in development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - quivr-network
+
+  typescript-client:
+    build:
+      context: ./typescript-client
+      dockerfile: Dockerfile
+    container_name: quivr-typescript-client
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - QUIVR_SERVICE_URL=http://quivr-service:8000
+      - LOG_LEVEL=info
+    depends_on:
+      quivr-service:
+        condition: service_healthy
+    networks:
+      - quivr-network
+
+networks:
+  quivr-network:
+    driver: bridge
+
+volumes:
+  brains_data:
