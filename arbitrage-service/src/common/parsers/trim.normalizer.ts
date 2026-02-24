@@ -40,7 +40,7 @@ const TRIM_MAP: Record<string, string> = {
  * "M-Sport" | "MSport" | "M Sport" all become "M_SPORT".
  */
 export function normalizeTrim(raw: string | undefined | null): string | null {
-  if (!raw || typeof raw !== 'string') return null;
+  if (!raw) return null;
 
   const upper = raw.trim().toUpperCase();
   if (!upper) return null;

@@ -12,7 +12,7 @@ const NON_PRICE_PATTERNS = [
  * Returns null for non-numeric values like "Call for Price".
  */
 export function parsePrice(raw: string | undefined | null): number | null {
-  if (!raw || typeof raw !== 'string') return null;
+  if (!raw) return null;
 
   const trimmed = raw.trim();
   if (!trimmed) return null;

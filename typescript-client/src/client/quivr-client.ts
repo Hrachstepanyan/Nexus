@@ -3,15 +3,18 @@
  */
 import type { AxiosInstance, AxiosError } from 'axios';
 import axios from 'axios';
+import type { default as nodeFormData } from 'form-data';
 import { env } from '../config/environment.js';
-import type { BrainCreate,
+import type {
+  BrainCreate,
   BrainResponse,
   BrainList,
   QueryRequest,
   QueryResponse,
   HealthResponse,
   DocumentList,
-  DocumentMetadata } from '../types/schemas.js';
+  DocumentMetadata,
+} from '../types/schemas.js';
 import {
   BrainResponseSchema,
   BrainListSchema,
@@ -20,6 +23,12 @@ import {
   DocumentListSchema,
   DocumentMetadataSchema,
 } from '../types/schemas.js';
+
+interface UploadResult {
+  message: string;
+  files: string[];
+  brain_id: string;
+}
 
 export class QuivrClientError extends Error {
   constructor(
@@ -67,7 +76,7 @@ export class QuivrClient {
    * Check service health
    */
   async health(): Promise<HealthResponse> {
-    const { data } = await this.client.get('/health');
+    const { data } = await this.client.get<HealthResponse>('/health');
     return HealthResponseSchema.parse(data);
   }
 
@@ -75,7 +84,7 @@ export class QuivrClient {
    * Create a new brain
    */
   async createBrain(brainData: BrainCreate): Promise<BrainResponse> {
-    const { data } = await this.client.post('/brains', brainData);
+    const { data } = await this.client.post<BrainResponse>('/brains', brainData);
     return BrainResponseSchema.parse(data);
   }
 
@@ -83,7 +92,7 @@ export class QuivrClient {
    * Get all brains
    */
   async listBrains(): Promise<BrainList> {
-    const { data } = await this.client.get('/brains');
+    const { data } = await this.client.get<BrainList>('/brains');
     return BrainListSchema.parse(data);
   }
 
@@ -91,7 +100,7 @@ export class QuivrClient {
    * Get brain by ID
    */
   async getBrain(brainId: string): Promise<BrainResponse> {
-    const { data } = await this.client.get(`/brains/${brainId}`);
+    const { data } = await this.client.get<BrainResponse>(`/brains/${brainId}`);
     return BrainResponseSchema.parse(data);
   }
 
@@ -109,7 +118,7 @@ export class QuivrClient {
     brainId: string,
     files: File[] | Buffer[],
     filenames?: string[],
-  ): Promise<{ message: string; files: string[]; brain_id: string }> {
+  ): Promise<UploadResult> {
     const formData = new FormData();
 
     files.forEach((file, index) => {
@@ -123,7 +132,7 @@ export class QuivrClient {
       }
     });
 
-    const { data } = await this.client.post(
+    const { data } = await this.client.post<UploadResult>(
       `/brains/${brainId}/documents`,
       formData,
       {
@@ -138,21 +147,16 @@ export class QuivrClient {
 
   /**
    * Upload documents with FormData (Node.js specific)
-   *
-   * Note: Using any type for formData due to Node.js FormData incompatibility
-   * with browser FormData types. This is a known TypeScript limitation.
    */
   async uploadDocumentsWithFormData(
     brainId: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formData: any,
-  ): Promise<{ message: string; files: string[]; brain_id: string }> {
-    const { data } = await this.client.post(
+    formData: nodeFormData,
+  ): Promise<UploadResult> {
+    const { data } = await this.client.post<UploadResult>(
       `/brains/${brainId}/documents`,
       formData,
       {
         headers: {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           ...formData.getHeaders(),
         },
         maxBodyLength: Infinity,
@@ -170,7 +174,7 @@ export class QuivrClient {
     brainId: string,
     query: QueryRequest,
   ): Promise<QueryResponse> {
-    const { data } = await this.client.post(`/brains/${brainId}/query`, query);
+    const { data } = await this.client.post<QueryResponse>(`/brains/${brainId}/query`, query);
     return QueryResponseSchema.parse(data);
   }
 
@@ -178,7 +182,7 @@ export class QuivrClient {
    * List all documents in a brain
    */
   async listDocuments(brainId: string): Promise<DocumentList> {
-    const { data } = await this.client.get(`/brains/${brainId}/documents`);
+    const { data } = await this.client.get<DocumentList>(`/brains/${brainId}/documents`);
     return DocumentListSchema.parse(data);
   }
 
@@ -186,7 +190,7 @@ export class QuivrClient {
    * Get metadata for a specific document
    */
   async getDocument(brainId: string, documentName: string): Promise<DocumentMetadata> {
-    const { data } = await this.client.get(`/brains/${brainId}/documents/${encodeURIComponent(documentName)}`);
+    const { data } = await this.client.get<DocumentMetadata>(`/brains/${brainId}/documents/${encodeURIComponent(documentName)}`);
     return DocumentMetadataSchema.parse(data);
   }
 

@@ -39,8 +39,7 @@ export class BrowserPoolService implements OnModuleDestroy {
 
     this.activePages++;
     const browser = await this.getBrowser();
-    const page = await browser.newPage();
-    return page;
+    return browser.newPage();
   }
 
   async releasePage(page: Page): Promise<void> {

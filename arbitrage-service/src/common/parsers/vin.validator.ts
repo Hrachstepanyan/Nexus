@@ -11,7 +11,7 @@ const WEIGHTS = [8, 7, 6, 5, 4, 3, 2, 10, 0, 9, 8, 7, 6, 5, 4, 3, 2];
  * Returns true if valid, false otherwise.
  */
 export function isValidVIN(vin: string | undefined | null): boolean {
-  if (!vin || typeof vin !== 'string') return false;
+  if (!vin) return false;
 
   const upper = vin.trim().toUpperCase();
 
@@ -44,7 +44,7 @@ export function isValidVIN(vin: string | undefined | null): boolean {
  * Useful for scraped data where check digits may be unreliable.
  */
 export function isValidVINFormat(vin: string | undefined | null): boolean {
-  if (!vin || typeof vin !== 'string') return false;
+  if (!vin) return false;
 
   const upper = vin.trim().toUpperCase();
   return /^[A-HJ-NPR-Z0-9]{17}$/.test(upper);

@@ -3,7 +3,7 @@
  * Returns null for invalid values.
  */
 export function parseMileage(raw: string | undefined | null): number | null {
-  if (!raw || typeof raw !== 'string') return null;
+  if (!raw) return null;
 
   const trimmed = raw.trim();
   if (!trimmed) return null;
