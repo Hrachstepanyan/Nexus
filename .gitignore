@@ -44,3 +44,12 @@ Thumbs.db
 # Vector stores
 *.faiss
 *.index
+
+# Arbitrage service
+arbitrage-service/node_modules/
+arbitrage-service/dist/
+
+# Angular UI
+arbitrage-ui/node_modules/
+arbitrage-ui/dist/
+arbitrage-ui/.angular/

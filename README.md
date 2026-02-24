@@ -61,9 +61,41 @@ npm run dev:ts        # TypeScript client on :3000
 .
 ├── quivr-service/       # Python FastAPI service
 ├── typescript-client/   # TypeScript Express client
+├── arbitrage-service/   # NestJS car market intelligence API
+├── arbitrage-ui/        # Angular frontend for ArbitrageAuto
 ├── docs/               # Documentation
 └── docker-compose.yml  # Container orchestration
 ```
+
+---
+
+## ArbitrageAuto AI
+
+Car market intelligence platform built on top of the Nexus monorepo.
+
+### Features
+- **Market Data API** - Filtered, paginated car listings with real-time stats
+- **Valuations** - Fair value estimates using linear regression on comparables
+- **Deal Scoring** - -100 to 100 score based on price vs expected value
+- **Scatter Charts** - Price vs mileage visualization with regression lines
+- **Automated Scraping** - Nightly data collection with MAD outlier filtering
+- **TimescaleDB** - Time-series price tracking and market aggregates
+
+### Quick Start
+```bash
+npm run install:arbitrage    # Install NestJS service deps
+npm run dev:arbitrage        # Start on port 4000
+npm run dev:ui               # Start Angular UI on port 4200
+```
+
+### API Endpoints
+- `GET /api/v1/market-data` - Filtered listings + stats
+- `GET /api/v1/valuations/:vin` - VIN-specific valuation
+- `GET /api/v1/valuations/estimate` - Estimate by make/model/year/mileage
+- `GET /api/v1/charts/scatter` - Scatter plot data with regression
+- `POST /admin/scraper/run/:source` - Manual scraper trigger
+
+See [ArbitrageAuto API Reference](./docs/arbitrage-api-reference.md) for full documentation.
 
 ## Documentation
 

@@ -45,9 +45,73 @@ services:
     networks:
       - quivr-network
 
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    container_name: arbitrage-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-arbitrage_db}
+      - POSTGRES_USER=${POSTGRES_USER:-nexus}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nexus_password}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nexus} -d ${POSTGRES_DB:-arbitrage_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - quivr-network
+
+  arbitrage-service:
+    build:
+      context: ./arbitrage-service
+      dockerfile: Dockerfile
+    container_name: arbitrage-service
+    ports:
+      - "4000:4000"
+    environment:
+      - ARBITRAGE_SERVICE_PORT=4000
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD:-nexus_password}@postgres:5432/${POSTGRES_DB:-arbitrage_db}
+      - USE_MOCK_SCRAPER=${USE_MOCK_SCRAPER:-true}
+      - PROXY_LIST=${PROXY_LIST:-}
+      - SCRAPER_MAX_BROWSERS=${SCRAPER_MAX_BROWSERS:-3}
+      - SCRAPER_RATE_LIMIT_MIN_MS=${SCRAPER_RATE_LIMIT_MIN_MS:-2000}
+      - SCRAPER_RATE_LIMIT_MAX_MS=${SCRAPER_RATE_LIMIT_MAX_MS:-5000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./arbitrage-service/src:/app/src  # Hot reload in development
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - quivr-network
+
+  arbitrage-ui:
+    build:
+      context: ./arbitrage-ui
+      dockerfile: Dockerfile
+    container_name: arbitrage-ui
+    ports:
+      - "4200:80"
+    depends_on:
+      arbitrage-service:
+        condition: service_healthy
+    networks:
+      - quivr-network
+
 networks:
   quivr-network:
     driver: bridge
 
 volumes:
   brains_data:
+  pgdata:

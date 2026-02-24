@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Listing {
+  vin             String   @id @db.VarChar(17)
+  make            String   @db.VarChar(50)
+  model           String   @db.VarChar(50)
+  year            Int
+  trim            String?  @db.VarChar(100)
+  trimNormalized  String?  @map("trim_normalized") @db.VarChar(50)
+  price           Int      // cents
+  mileage         Int
+  city            String?  @db.VarChar(100)
+  state           String?  @db.VarChar(2)
+  zipCode         String?  @map("zip_code") @db.VarChar(10)
+  condition       String?  @db.VarChar(20)
+  titleStatus     String?  @map("title_status") @db.VarChar(20)
+  source          String   @db.VarChar(30)
+  sourceUrl       String?  @map("source_url") @db.VarChar(500)
+  daysOnMarket    Int?     @map("days_on_market")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  priceSnapshots PriceSnapshot[]
+
+  @@index([make, model, year])
+  @@index([make, model, year, trimNormalized])
+  @@index([state])
+  @@index([price])
+  @@index([isActive])
+  @@index([source])
+  @@map("listings")
+}
+
+model PriceSnapshot {
+  id           Int      @id @default(autoincrement())
+  vin          String   @db.VarChar(17)
+  price        Int      // cents
+  mileage      Int
+  source       String   @db.VarChar(30)
+  snapshotDate DateTime @map("snapshot_date") @db.Timestamptz()
+
+  listing Listing @relation(fields: [vin], references: [vin], onDelete: Cascade)
+
+  @@index([vin, snapshotDate])
+  @@index([snapshotDate])
+  @@map("price_snapshots")
+}
+
+model MarketAggregate {
+  id           Int      @id @default(autoincrement())
+  make         String   @db.VarChar(50)
+  model        String   @db.VarChar(50)
+  year         Int
+  trim         String?  @db.VarChar(50)
+  region       String?  @db.VarChar(50)
+  avgPrice     Int      @map("avg_price")
+  medianPrice  Int      @map("median_price")
+  minPrice     Int      @map("min_price")
+  maxPrice     Int      @map("max_price")
+  stdDev       Float    @map("std_dev")
+  listingCount Int      @map("listing_count")
+  computedDate DateTime @map("computed_date") @db.Timestamptz()
+
+  @@index([make, model, year])
+  @@index([make, model, year, trim])
+  @@index([computedDate])
+  @@map("market_aggregates")
+}
+
+model SoldListing {
+  id        Int      @id @default(autoincrement())
+  vin       String   @db.VarChar(17)
+  make      String   @db.VarChar(50)
+  model     String   @db.VarChar(50)
+  year      Int
+  soldPrice Int      @map("sold_price")
+  mileage   Int
+  source    String   @db.VarChar(30)
+  soldDate  DateTime @map("sold_date") @db.Timestamptz()
+
+  @@index([vin])
+  @@index([make, model, year])
+  @@index([soldDate])
+  @@map("sold_listings")
+}
+
+model UserWatchlist {
+  id         String  @id @default(uuid())
+  userId     String  @map("user_id") @db.Uuid
+  make       String  @db.VarChar(50)
+  model      String? @db.VarChar(50)
+  yearMin    Int?    @map("year_min")
+  yearMax    Int?    @map("year_max")
+  priceMax   Int?    @map("price_max")
+  mileageMax Int?    @map("mileage_max")
+  location   String? @db.VarChar(100)
+  radius     Int?    // miles
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("user_watchlists")
+}
