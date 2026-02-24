@@ -2,6 +2,9 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# OpenSSL 3 is required by the Prisma query engine on Alpine
+RUN apk add --no-cache openssl
+
 # Copy package files
 COPY package*.json ./
 COPY tsconfig.json ./
@@ -25,6 +28,9 @@ RUN npm run build
 FROM node:20-alpine
 
 WORKDIR /app
+
+# OpenSSL 3 is required by the Prisma query engine on Alpine
+RUN apk add --no-cache openssl
 
 # Copy package files and install production dependencies only
 COPY package*.json ./

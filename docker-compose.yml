@@ -19,7 +19,7 @@ services:
       - ./quivr-service/brains_data:/app/brains_data
       - ./quivr-service/src:/app/src  # Hot reload in development
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -49,7 +49,7 @@ services:
     image: timescale/timescaledb:latest-pg16
     container_name: arbitrage-postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-arbitrage_db}
       - POSTGRES_USER=${POSTGRES_USER:-nexus}
@@ -94,6 +94,22 @@ services:
       start_period: 30s
     networks:
       - quivr-network
+
+  node:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./arbitrage-service:/app
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-nexus}:${POSTGRES_PASSWORD:-nexus_password}@postgres:5432/${POSTGRES_DB:-arbitrage_db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - quivr-network
+    stdin_open: true
+    tty: true
+    entrypoint: ['/bin/sh', '-c', 'apk add --no-cache openssl && npx prisma generate && exec /bin/sh']
 
   arbitrage-ui:
     build:
